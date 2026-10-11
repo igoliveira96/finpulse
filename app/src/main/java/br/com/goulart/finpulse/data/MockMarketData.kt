@@ -1,47 +1,5 @@
 package br.com.goulart.finpulse.data
 
-import kotlinx.coroutines.delay
-import kotlin.time.Duration.Companion.milliseconds
-
-data class Investor(val firstName: String, val initials: String)
-
-data class Portfolio(
-    val balanceInCents: Long,
-    val monthlyGainInCents: Long,
-    val monthlyChangePercent: Double,
-    val history: List<Float>,
-)
-
-data class Stock(
-    val symbol: String,
-    val company: String,
-    val priceInCents: Long,
-    val dailyChangePercent: Double,
-    val history: List<Float>,
-    val isFavorite: Boolean = false,
-)
-
-data class HomeSnapshot(
-    val investor: Investor,
-    val portfolio: Portfolio,
-    val stocks: List<Stock>,
-) {
-    val favorites: List<Stock> get() = stocks.filter(Stock::isFavorite)
-}
-
-/** A suspend boundary that can later be implemented by a real HTTP client. */
-fun interface FinPulseApi {
-    suspend fun getHome(): HomeSnapshot
-}
-
-class MockFinPulseApi(private val latencyMillis: Long = 1_200L) : FinPulseApi {
-    override suspend fun getHome(): HomeSnapshot {
-        // Non-blocking latency: the UI stays responsive during the request.
-        delay(latencyMillis.milliseconds)
-        return MockMarketData.home
-    }
-}
-
 /** Deterministic demo quotes, shared with previews; these are not live market data. */
 object MockMarketData {
     val home = HomeSnapshot(

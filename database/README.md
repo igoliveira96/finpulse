@@ -17,8 +17,8 @@ observa as seis tabelas e monta o `HomeSnapshot` em uma transação, incluindo
 favoritas e históricos ordenados. Alterações persistidas são refletidas na tela.
 O investidor local tem id `1`; uma futura sessão poderá fornecer outro id.
 
-`MockFinPulseApi` não participa do carregamento da Home. O mock é mantido como
-referência para previews e testes. Falhas de leitura ou ausência do investidor ou
+`MockMarketData` fornece dados de referência para previews, testes e a simulação
+de cotações. Falhas de leitura ou ausência do investidor ou
 patrimônio levam ao estado de erro, sem substituir dados locais pelo mock.
 
 ## SWR das favoritas

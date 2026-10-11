@@ -4,7 +4,6 @@ import android.content.Context
 import android.database.sqlite.SQLiteConstraintException
 import androidx.test.core.app.ApplicationProvider
 import br.com.goulart.finpulse.data.HomeSnapshot
-import br.com.goulart.finpulse.data.MockFinPulseApi
 import br.com.goulart.finpulse.data.MockMarketData
 import br.com.goulart.finpulse.data.local.FinPulseDatabase
 import br.com.goulart.finpulse.data.local.entity.FavoriteEntity
@@ -70,7 +69,8 @@ class FinPulseDatabaseTest {
         assertEquals(6, database.stockDao().getAllWithHistory().size)
         assertEquals(26, database.portfolioDao().getWithHistory(1)?.history?.size)
         // Local edits must not mutate the independent mock fixture.
-        assertEquals(MockMarketData.home, MockFinPulseApi(latencyMillis = 0).getHome())
+        assertEquals(original.toInvestor(), MockMarketData.home.investor)
+        assertTrue(MockMarketData.home.favorites.any { it.symbol == "PETR4" })
     }
 
     @Test
