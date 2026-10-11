@@ -7,7 +7,6 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import br.com.goulart.finpulse.FinPulseApplication
 import br.com.goulart.finpulse.data.HomeRepository
-import br.com.goulart.finpulse.data.HomeSnapshot
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.TimeoutCancellationException
@@ -24,17 +23,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withTimeout
-
-enum class FavoritesRefreshStatus { Idle, Refreshing, Updated, Failed }
-
-sealed interface HomeUiState {
-    data object Loading : HomeUiState
-    data class Ready(
-        val data: HomeSnapshot,
-        val favoritesRefresh: FavoritesRefreshStatus = FavoritesRefreshStatus.Idle,
-    ) : HomeUiState
-    data object Error : HomeUiState
-}
 
 class HomeViewModel(private val repository: HomeRepository) : ViewModel() {
     private val mutableState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
