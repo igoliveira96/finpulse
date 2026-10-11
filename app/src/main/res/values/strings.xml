@@ -1,3 +1,19 @@
 <resources>
     <string name="app_name">FinPulse</string>
+    <string name="greeting">Olá, %1$s</string>
+    <string name="portfolio_subtitle">Seu patrimônio, em perspectiva.</string>
+    <string name="invested_wealth">Patrimônio investido</string>
+    <string name="favorites">Favoritas</string>
+    <string name="stocks">Ações</string>
+    <string name="edit">Editar</string>
+    <string name="notifications">Notificações</string>
+    <string name="profile">Perfil</string>
+    <string name="search_stocks">Buscar ações</string>
+    <string name="balance_visibility">Visibilidade do patrimônio</string>
+    <string name="favorite_stock">Favorita: %1$s</string>
+    <string name="in_month">no mês</string>
+    <string name="all_period">Tudo</string>
+    <string name="illustrative_quotes">Dados e cotações ilustrativos.</string>
+    <string name="loading_portfolio">Carregando seu patrimônio…</string>
+    <string name="loading_error">Não foi possível carregar os dados.</string>
 </resources>

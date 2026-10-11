@@ -2,10 +2,11 @@ package br.com.goulart.finpulse.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
-
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+val FinBlue = Color(0xFF007AFF)
+val FinBackground = Color(0xFFF5F5F7)
+val FinInk = Color(0xFF1D1D1F)
+val FinSecondary = Color(0xFF767680)
+val FinDivider = Color(0xFFECECF0)
+val FinPositive = Color(0xFF00875A)
+val FinNegative = Color(0xFFD94048)
+val FinPositiveContainer = Color(0xFFE3F5ED)
