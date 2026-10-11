@@ -2,10 +2,10 @@ package br.com.goulart.finpulse
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import br.com.goulart.finpulse.data.HomeSnapshot
-import br.com.goulart.finpulse.data.MockMarketData
 import br.com.goulart.finpulse.data.local.FinPulseDatabase
-import br.com.goulart.finpulse.data.local.RoomHomeRepository
+import br.com.goulart.finpulse.data.model.HomeSnapshot
+import br.com.goulart.finpulse.data.remote.mock.MockMarketData
+import br.com.goulart.finpulse.data.repository.RoomHomeRepository
 import java.util.UUID
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.first

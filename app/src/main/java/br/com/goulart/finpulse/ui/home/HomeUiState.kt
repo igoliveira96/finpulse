@@ -1,6 +1,6 @@
 package br.com.goulart.finpulse.ui.home
 
-import br.com.goulart.finpulse.data.HomeSnapshot
+import br.com.goulart.finpulse.data.model.HomeSnapshot
 
 sealed interface HomeUiState {
     data object Loading : HomeUiState

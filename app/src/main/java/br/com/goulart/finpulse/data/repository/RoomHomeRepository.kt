@@ -1,13 +1,13 @@
-package br.com.goulart.finpulse.data.local
+package br.com.goulart.finpulse.data.repository
 
 import androidx.room.withTransaction
-import br.com.goulart.finpulse.data.HomeRepository
-import br.com.goulart.finpulse.data.HomeSnapshot
-import br.com.goulart.finpulse.data.FavoriteQuotesApi
-import br.com.goulart.finpulse.data.MockFavoriteQuotesApi
+import br.com.goulart.finpulse.data.local.FinPulseDatabase
 import br.com.goulart.finpulse.data.local.model.toInvestor
 import br.com.goulart.finpulse.data.local.model.toPortfolio
 import br.com.goulart.finpulse.data.local.model.toStock
+import br.com.goulart.finpulse.data.model.HomeSnapshot
+import br.com.goulart.finpulse.data.remote.FavoriteQuotesApi
+import br.com.goulart.finpulse.data.remote.mock.MockFavoriteQuotesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map

@@ -8,7 +8,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.lifecycle.viewModelScope
 import androidx.test.core.app.ApplicationProvider
 import br.com.goulart.finpulse.data.local.FinPulseDatabase
-import br.com.goulart.finpulse.data.local.RoomHomeRepository
+import br.com.goulart.finpulse.data.repository.RoomHomeRepository
 import br.com.goulart.finpulse.ui.home.HomeRoute
 import br.com.goulart.finpulse.ui.home.HomeViewModel
 import br.com.goulart.finpulse.ui.theme.FinPulseTheme

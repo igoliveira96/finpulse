@@ -1,4 +1,4 @@
-package br.com.goulart.finpulse.data
+package br.com.goulart.finpulse.data.model
 
 data class HomeSnapshot(
     val investor: Investor,

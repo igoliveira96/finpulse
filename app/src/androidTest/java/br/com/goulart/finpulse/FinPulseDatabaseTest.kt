@@ -3,13 +3,13 @@ package br.com.goulart.finpulse
 import android.content.Context
 import android.database.sqlite.SQLiteConstraintException
 import androidx.test.core.app.ApplicationProvider
-import br.com.goulart.finpulse.data.HomeSnapshot
-import br.com.goulart.finpulse.data.MockMarketData
 import br.com.goulart.finpulse.data.local.FinPulseDatabase
 import br.com.goulart.finpulse.data.local.entity.FavoriteEntity
 import br.com.goulart.finpulse.data.local.model.toInvestor
 import br.com.goulart.finpulse.data.local.model.toPortfolio
 import br.com.goulart.finpulse.data.local.model.toStock
+import br.com.goulart.finpulse.data.model.HomeSnapshot
+import br.com.goulart.finpulse.data.remote.mock.MockMarketData
 import java.util.UUID
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.async

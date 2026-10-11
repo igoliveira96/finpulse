@@ -1,20 +1,11 @@
-package br.com.goulart.finpulse.data
+package br.com.goulart.finpulse.data.remote.mock
 
+import br.com.goulart.finpulse.data.remote.FavoriteQuotesApi
+import br.com.goulart.finpulse.data.remote.model.StockQuote
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.round
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.delay
-
-data class StockQuote(
-    val symbol: String,
-    val priceInCents: Long,
-    val dailyChangePercent: Double,
-    val history: List<Float>,
-)
-
-fun interface FavoriteQuotesApi {
-    suspend fun getQuotes(symbols: List<String>): List<StockQuote>
-}
 
 /** A deterministic market simulation for the SWR demo, not a live quote service. */
 class MockFavoriteQuotesApi(private val latencyMillis: Long = 1_200L) : FavoriteQuotesApi {

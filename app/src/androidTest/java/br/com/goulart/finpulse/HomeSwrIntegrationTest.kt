@@ -12,11 +12,11 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.lifecycle.viewModelScope
 import androidx.test.core.app.ApplicationProvider
-import br.com.goulart.finpulse.data.FavoriteQuotesApi
-import br.com.goulart.finpulse.data.MockMarketData
-import br.com.goulart.finpulse.data.StockQuote
 import br.com.goulart.finpulse.data.local.FinPulseDatabase
-import br.com.goulart.finpulse.data.local.RoomHomeRepository
+import br.com.goulart.finpulse.data.remote.FavoriteQuotesApi
+import br.com.goulart.finpulse.data.remote.mock.MockMarketData
+import br.com.goulart.finpulse.data.remote.model.StockQuote
+import br.com.goulart.finpulse.data.repository.RoomHomeRepository
 import br.com.goulart.finpulse.ui.home.HomeRoute
 import br.com.goulart.finpulse.ui.home.HomeViewModel
 import br.com.goulart.finpulse.ui.theme.FinPulseTheme

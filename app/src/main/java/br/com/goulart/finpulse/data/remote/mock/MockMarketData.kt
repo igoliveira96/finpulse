@@ -1,4 +1,9 @@
-package br.com.goulart.finpulse.data
+package br.com.goulart.finpulse.data.remote.mock
+
+import br.com.goulart.finpulse.data.model.HomeSnapshot
+import br.com.goulart.finpulse.data.model.Investor
+import br.com.goulart.finpulse.data.model.Portfolio
+import br.com.goulart.finpulse.data.model.Stock
 
 /** Deterministic demo quotes, shared with previews; these are not live market data. */
 object MockMarketData {

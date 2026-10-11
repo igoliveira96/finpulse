@@ -1,9 +1,9 @@
 package br.com.goulart.finpulse.data.local.model
 
-import br.com.goulart.finpulse.data.Investor
-import br.com.goulart.finpulse.data.Portfolio
-import br.com.goulart.finpulse.data.Stock
 import br.com.goulart.finpulse.data.local.entity.InvestorEntity
+import br.com.goulart.finpulse.data.model.Investor
+import br.com.goulart.finpulse.data.model.Portfolio
+import br.com.goulart.finpulse.data.model.Stock
 
 fun InvestorEntity.toInvestor() = Investor(firstName, initials)
 

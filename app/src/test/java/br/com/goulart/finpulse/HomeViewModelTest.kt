@@ -1,9 +1,9 @@
 package br.com.goulart.finpulse
 
 import androidx.lifecycle.viewModelScope
-import br.com.goulart.finpulse.data.HomeRepository
-import br.com.goulart.finpulse.data.HomeSnapshot
-import br.com.goulart.finpulse.data.MockMarketData
+import br.com.goulart.finpulse.data.model.HomeSnapshot
+import br.com.goulart.finpulse.data.remote.mock.MockMarketData
+import br.com.goulart.finpulse.data.repository.HomeRepository
 import br.com.goulart.finpulse.ui.home.HomeUiState
 import br.com.goulart.finpulse.ui.home.HomeViewModel
 import java.io.IOException

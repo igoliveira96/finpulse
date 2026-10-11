@@ -2,11 +2,11 @@ package br.com.goulart.finpulse
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import br.com.goulart.finpulse.data.FavoriteQuotesApi
-import br.com.goulart.finpulse.data.MockMarketData
-import br.com.goulart.finpulse.data.StockQuote
 import br.com.goulart.finpulse.data.local.FinPulseDatabase
-import br.com.goulart.finpulse.data.local.RoomHomeRepository
+import br.com.goulart.finpulse.data.remote.FavoriteQuotesApi
+import br.com.goulart.finpulse.data.remote.mock.MockMarketData
+import br.com.goulart.finpulse.data.remote.model.StockQuote
+import br.com.goulart.finpulse.data.repository.RoomHomeRepository
 import java.io.IOException
 import java.util.UUID
 import kotlinx.coroutines.CompletableDeferred

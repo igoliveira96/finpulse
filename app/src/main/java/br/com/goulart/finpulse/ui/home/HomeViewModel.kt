@@ -6,7 +6,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import br.com.goulart.finpulse.FinPulseApplication
-import br.com.goulart.finpulse.data.HomeRepository
+import br.com.goulart.finpulse.data.repository.HomeRepository
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.TimeoutCancellationException

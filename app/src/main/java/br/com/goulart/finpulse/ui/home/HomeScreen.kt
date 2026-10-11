@@ -67,10 +67,10 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import br.com.goulart.finpulse.R
-import br.com.goulart.finpulse.data.HomeSnapshot
-import br.com.goulart.finpulse.data.MockMarketData
-import br.com.goulart.finpulse.data.Portfolio
-import br.com.goulart.finpulse.data.Stock
+import br.com.goulart.finpulse.data.model.HomeSnapshot
+import br.com.goulart.finpulse.data.model.Portfolio
+import br.com.goulart.finpulse.data.model.Stock
+import br.com.goulart.finpulse.data.remote.mock.MockMarketData
 import br.com.goulart.finpulse.ui.theme.FinNegative
 import br.com.goulart.finpulse.ui.theme.FinPositive
 import br.com.goulart.finpulse.ui.theme.FinPositiveContainer

@@ -21,6 +21,16 @@ O investidor local tem id `1`; uma futura sessão poderá fornecer outro id.
 de cotações. Falhas de leitura ou ausência do investidor ou
 patrimônio levam ao estado de erro, sem substituir dados locais pelo mock.
 
+## Organização da camada de dados
+
+- `data/model`: modelos compartilhados com a Home (`Investor`, `Portfolio`,
+  `Stock` e `HomeSnapshot`).
+- `data/repository`: contrato `HomeRepository` e implementação `RoomHomeRepository`,
+  que coordena o banco local e a atualização das cotações.
+- `data/local`: banco Room, DAOs, entidades, relações e mapeamentos locais.
+- `data/remote`: contrato `FavoriteQuotesApi`; `model` contém a resposta
+  `StockQuote` e `mock` contém a simulação de cotações e os dados de referência.
+
 ## SWR das favoritas
 
 A Home mostra primeiro o cache do Room e revalida somente as favoritas através de
