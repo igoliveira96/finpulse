@@ -5,7 +5,10 @@
     <string name="invested_wealth">Patrimônio investido</string>
     <string name="favorites">Favoritas</string>
     <string name="stocks">Ações</string>
-    <string name="edit">Editar</string>
+    <string name="refreshing_quotes">Atualizando…</string>
+    <string name="cached_quotes">Últimos valores disponíveis</string>
+    <string name="automatic_quotes">Atualiza a cada 5s</string>
+    <string name="validated_quotes">Cotação disponível</string>
     <string name="notifications">Notificações</string>
     <string name="profile">Perfil</string>
     <string name="search_stocks">Buscar ações</string>

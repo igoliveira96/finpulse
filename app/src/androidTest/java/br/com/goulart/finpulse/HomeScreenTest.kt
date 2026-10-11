@@ -41,7 +41,6 @@ class HomeScreenTest {
         compose.onNodeWithContentDescription("Perfil").assertHasNoClickAction()
         compose.onNodeWithContentDescription("Notificações").assertHasNoClickAction()
         compose.onNodeWithContentDescription("Visibilidade do patrimônio").assertHasNoClickAction()
-        compose.onNodeWithText("Editar").assertHasNoClickAction()
         compose.onNodeWithText("3M").assertHasNoClickAction()
     }
 

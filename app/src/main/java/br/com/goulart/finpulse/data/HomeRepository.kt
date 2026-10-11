@@ -2,6 +2,7 @@ package br.com.goulart.finpulse.data
 
 import kotlinx.coroutines.flow.Flow
 
-fun interface HomeRepository {
+interface HomeRepository {
     fun observeHome(): Flow<HomeSnapshot>
+    suspend fun refreshFavorites(): HomeSnapshot
 }

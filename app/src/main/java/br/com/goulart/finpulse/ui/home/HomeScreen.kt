@@ -1,6 +1,9 @@
 package br.com.goulart.finpulse.ui.home
 
+import android.os.Build
 import androidx.annotation.DrawableRes
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -31,10 +34,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.BlurredEdgeTreatment
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -48,6 +54,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -55,6 +62,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import br.com.goulart.finpulse.R
 import br.com.goulart.finpulse.data.HomeSnapshot
@@ -69,6 +79,12 @@ import br.com.goulart.finpulse.ui.theme.FinPulseTheme
 @Composable
 fun HomeRoute(viewModel: HomeViewModel = viewModel(factory = HomeViewModel.Factory)) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val lifecycleOwner = LocalLifecycleOwner.current
+    LaunchedEffect(viewModel, lifecycleOwner) {
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            viewModel.revalidateFavoritesWhileVisible()
+        }
+    }
     HomeScreen(state)
 }
 
@@ -79,7 +95,7 @@ fun HomeScreen(state: HomeUiState, modifier: Modifier = Modifier) {
             when (state) {
                 HomeUiState.Loading -> StatusContent(loading = true)
                 HomeUiState.Error -> StatusContent(loading = false)
-                is HomeUiState.Ready -> HomeContent(state.data)
+                is HomeUiState.Ready -> HomeContent(state.data, state.favoritesRefresh)
             }
         }
     }
@@ -111,7 +127,7 @@ private fun StatusContent(loading: Boolean) {
 }
 
 @Composable
-private fun HomeContent(data: HomeSnapshot) {
+private fun HomeContent(data: HomeSnapshot, refreshStatus: FavoritesRefreshStatus) {
     LazyColumn(
         modifier = Modifier.widthIn(max = 720.dp).fillMaxSize().testTag("home_list"),
         contentPadding = PaddingValues(bottom = 28.dp),
@@ -139,12 +155,7 @@ private fun HomeContent(data: HomeSnapshot) {
                 title = stringResource(R.string.favorites),
                 modifier = Modifier.padding(top = 28.dp, bottom = 14.dp),
             ) {
-                Text(
-                    stringResource(R.string.edit),
-                    Modifier.semantics { disabled() },
-                    color = MaterialTheme.colorScheme.primary,
-                    style = MaterialTheme.typography.labelLarge,
-                )
+                FavoriteRefreshLabel(refreshStatus)
             }
             BoxWithConstraints(Modifier.fillMaxWidth()) {
                 val cardWidth = ((maxWidth - 68.dp) / 3).coerceIn(112.dp, 200.dp)
@@ -152,7 +163,9 @@ private fun HomeContent(data: HomeSnapshot) {
                     contentPadding = PaddingValues(horizontal = 24.dp),
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
                 ) {
-                    items(data.favorites, key = Stock::symbol) { FavoriteCard(it, cardWidth) }
+                    items(data.favorites, key = Stock::symbol) {
+                        FavoriteCard(it, cardWidth, refreshStatus == FavoritesRefreshStatus.Refreshing)
+                    }
                 }
             }
         }
@@ -294,18 +307,45 @@ private fun SectionHeader(title: String, modifier: Modifier = Modifier, action: 
 }
 
 @Composable
-private fun FavoriteCard(stock: Stock, width: Dp) {
+private fun FavoriteRefreshLabel(status: FavoritesRefreshStatus) {
+    val refreshing = status == FavoritesRefreshStatus.Refreshing
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        if (refreshing) CircularProgressIndicator(Modifier.size(12.dp), strokeWidth = 1.5.dp)
+        Text(
+            stringResource(when (status) {
+                FavoritesRefreshStatus.Refreshing -> R.string.refreshing_quotes
+                FavoritesRefreshStatus.Failed -> R.string.cached_quotes
+                else -> R.string.automatic_quotes
+            }),
+            style = MaterialTheme.typography.labelSmall,
+            color = if (refreshing) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+@Composable
+private fun FavoriteCard(stock: Stock, width: Dp, refreshing: Boolean) {
     val changeColor = if (stock.dailyChangePercent >= 0) FinPositive else FinNegative
+    val blurRadius by animateDpAsState(if (refreshing) 4.dp else 0.dp, tween(200), label = "quoteBlur")
+    val quoteState = stringResource(if (refreshing) R.string.refreshing_quotes else R.string.validated_quotes)
+    // RenderEffect blur is available from Android 12. Older versions use an obscured placeholder.
+    val maskValues = refreshing && Build.VERSION.SDK_INT < Build.VERSION_CODES.S
     Surface(shape = MaterialTheme.shapes.medium, modifier = Modifier.width(width)) {
         Column(Modifier.padding(12.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text(stock.symbol, Modifier.weight(1f), style = MaterialTheme.typography.titleSmall)
                 StaticIcon(R.drawable.ic_star_filled, stringResource(R.string.favorite_stock, stock.symbol), size = 15)
             }
-            Text(currency(stock.priceInCents), Modifier.padding(top = 7.dp),
-                style = MaterialTheme.typography.titleMedium, maxLines = 1)
-            Text(percent(stock.dailyChangePercent), Modifier.padding(top = 4.dp),
-                style = MaterialTheme.typography.labelMedium, color = changeColor)
+            Column(
+                Modifier.testTag("favorite_values_${stock.symbol}")
+                    .semantics { stateDescription = quoteState }
+                    .blur(blurRadius, edgeTreatment = BlurredEdgeTreatment.Unbounded),
+            ) {
+                Text(if (maskValues) "R$ •••••" else currency(stock.priceInCents), Modifier.padding(top = 7.dp),
+                    style = MaterialTheme.typography.titleMedium, maxLines = 1)
+                Text(if (maskValues) "••••%" else percent(stock.dailyChangePercent), Modifier.padding(top = 4.dp),
+                    style = MaterialTheme.typography.labelMedium, color = changeColor)
+            }
             MarketChart(stock.history, changeColor, Modifier.fillMaxWidth().height(26.dp).padding(top = 6.dp))
         }
     }

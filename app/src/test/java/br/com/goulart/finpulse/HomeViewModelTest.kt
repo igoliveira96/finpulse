@@ -13,6 +13,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -41,10 +43,15 @@ class HomeViewModelTest {
 
     private fun viewModel(repository: HomeRepository) = HomeViewModel(repository).also(viewModels::add)
 
+    private fun repository(observe: () -> Flow<HomeSnapshot>) = object : HomeRepository {
+        override fun observeHome() = observe()
+        override suspend fun refreshFavorites() = observe().first()
+    }
+
     @Test
     fun showsLoadingUntilTheRepositoryEmitsItsFirstSnapshot() = runTest(dispatcher) {
         val response = CompletableDeferred<HomeSnapshot>()
-        val viewModel = viewModel(HomeRepository { flow { emit(response.await()) } })
+        val viewModel = viewModel(repository { flow { emit(response.await()) } })
         runCurrent()
         assertEquals(HomeUiState.Loading, viewModel.state.value)
         response.complete(MockMarketData.home)
@@ -54,14 +61,14 @@ class HomeViewModelTest {
 
     @Test
     fun aFailedDatabaseReadBecomesAnErrorState() = runTest(dispatcher) {
-        val viewModel = viewModel(HomeRepository { flow { throw IOException("Unavailable") } })
+        val viewModel = viewModel(repository { flow { throw IOException("Unavailable") } })
         runCurrent()
         assertEquals(HomeUiState.Error, viewModel.state.value)
     }
 
     @Test
     fun cancellationIsNotPresentedAsADatabaseFailure() = runTest(dispatcher) {
-        val viewModel = viewModel(HomeRepository { flow { throw CancellationException() } })
+        val viewModel = viewModel(repository { flow { throw CancellationException() } })
         runCurrent()
         assertEquals(HomeUiState.Loading, viewModel.state.value)
     }
@@ -69,7 +76,7 @@ class HomeViewModelTest {
     @Test
     fun repositoryChangesUpdateTheLoadedState() = runTest(dispatcher) {
         val snapshots = MutableStateFlow(MockMarketData.home)
-        val viewModel = viewModel(HomeRepository { snapshots })
+        val viewModel = viewModel(repository { snapshots })
         runCurrent()
         val changed = MockMarketData.home.copy(
             portfolio = MockMarketData.home.portfolio.copy(balanceInCents = 42_000_000),
@@ -82,7 +89,7 @@ class HomeViewModelTest {
     @Test
     fun observingStateDoesNotCreateNewRepositorySubscriptions() = runTest(dispatcher) {
         var subscriptions = 0
-        val viewModel = viewModel(HomeRepository {
+        val viewModel = viewModel(repository {
             flow {
                 subscriptions++
                 emit(MockMarketData.home)
@@ -97,7 +104,7 @@ class HomeViewModelTest {
     @Test
     fun aFailureAfterLoadingDoesNotSilentlyKeepStaleData() = runTest(dispatcher) {
         val failure = CompletableDeferred<Unit>()
-        val viewModel = viewModel(HomeRepository {
+        val viewModel = viewModel(repository {
             flow {
                 emit(MockMarketData.home)
                 failure.await()

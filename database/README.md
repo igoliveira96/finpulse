@@ -21,6 +21,29 @@ O investidor local tem id `1`; uma futura sessão poderá fornecer outro id.
 referência para previews e testes. Falhas de leitura ou ausência do investidor ou
 patrimônio levam ao estado de erro, sem substituir dados locais pelo mock.
 
+## SWR das favoritas
+
+A Home mostra primeiro o cache do Room e revalida somente as favoritas através de
+`FavoriteQuotesApi`. A implementação `MockFavoriteQuotesApi` simula 1,2 segundo
+de latência e varia preços, variações e os pontos dos gráficos para demonstração.
+Não são cotações de mercado em tempo real.
+
+Enquanto a Home estiver visível, a primeira revalidação começa assim que o cache
+está disponível. As próximas começam a cada 5 segundos, contados entre inícios,
+sem somar a latência ao intervalo e sem sobrepor requisições. Ao sair da Home,
+o ciclo e a requisição em andamento são cancelados; ao voltar, revalida novamente.
+
+Durante a requisição, os valores dos cards de favoritas ficam desfocados e a seção
+mostra “Atualizando…”. Após validar e gravar a resposta em uma transação, o blur é
+removido. Android anterior ao 12 usa valores mascarados como alternativa ao blur.
+Falhas ou timeout de 4 segundos preservam o cache e permitem nova tentativa no
+próximo ciclo. Uma resposta incompleta ou inválida não altera a base.
+
+Patrimônio, perfil e ações não favoritas não são revalidados. Como os cards e a
+lista usam a mesma tabela, a cotação de uma favorita também é refletida em sua linha
+na lista geral. Favoritas removidas durante uma requisição não são restauradas nem
+atualizadas pela resposta antiga.
+
 ## Regerar a base
 
 1. Edite o dump SQL. Para alterações estruturais, mantenha entidades, versão e
