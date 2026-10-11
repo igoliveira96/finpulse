@@ -1,6 +1,7 @@
 package br.com.goulart.finpulse.data
 
 import kotlinx.coroutines.delay
+import kotlin.time.Duration.Companion.milliseconds
 
 data class Investor(val firstName: String, val initials: String)
 
@@ -36,7 +37,7 @@ fun interface FinPulseApi {
 class MockFinPulseApi(private val latencyMillis: Long = 1_200L) : FinPulseApi {
     override suspend fun getHome(): HomeSnapshot {
         // Non-blocking latency: the UI stays responsive during the request.
-        delay(latencyMillis)
+        delay(latencyMillis.milliseconds)
         return MockMarketData.home
     }
 }
