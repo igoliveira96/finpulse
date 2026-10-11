@@ -6,36 +6,26 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import br.com.goulart.finpulse.FinPulseApplication
-import br.com.goulart.finpulse.data.repository.HomeRepository
-import kotlin.time.Duration.Companion.seconds
+import br.com.goulart.finpulse.domain.usecase.ObserveHomeUseCase
+import br.com.goulart.finpulse.domain.usecase.RevalidateFavoritesUseCase
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.TimeoutCancellationException
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.withTimeout
 
-class HomeViewModel(private val repository: HomeRepository) : ViewModel() {
+class HomeViewModel(
+    private val observeHome: ObserveHomeUseCase,
+    private val revalidateFavorites: RevalidateFavoritesUseCase,
+) : ViewModel() {
     private val mutableState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
     val state = mutableState.asStateFlow()
-    private val pollingMutex = Mutex()
 
     init {
         viewModelScope.launch {
             try {
-                repository.observeHome().collect { snapshot ->
-                    mutableState.update { current ->
-                        (current as? HomeUiState.Ready)?.copy(data = snapshot) ?: HomeUiState.Ready(snapshot)
-                    }
+                observeHome().collect { home ->
+                    mutableState.value = HomeUiState.Ready(home.snapshot, home.favoritesRefresh)
                 }
             } catch (cancelled: CancellationException) {
                 throw cancelled
@@ -46,49 +36,16 @@ class HomeViewModel(private val repository: HomeRepository) : ViewModel() {
     }
 
     /** Owned by the visible Home's lifecycle; cancellation stops both polling and requests. */
-    suspend fun revalidateFavoritesWhileVisible() = pollingMutex.withLock {
+    suspend fun revalidateFavoritesWhileVisible() {
         state.first { it is HomeUiState.Ready }
-        flow {
-            while (currentCoroutineContext().isActive) {
-                emit(Unit)
-                delay(5.seconds)
-            }
-        }.conflate().collect { refreshFavorites() }
-    }
-
-    private suspend fun refreshFavorites() {
-        val cached = mutableState.value as? HomeUiState.Ready ?: return
-        if (cached.data.favorites.isEmpty()) return
-        setRefreshStatus(FavoritesRefreshStatus.Refreshing)
-        try {
-            val refreshed = withTimeout(4.seconds) { repository.refreshFavorites() }
-            mutableState.update { current ->
-                if (current is HomeUiState.Ready) {
-                    current.copy(data = refreshed, favoritesRefresh = FavoritesRefreshStatus.Updated)
-                } else current
-            }
-        } catch (_: TimeoutCancellationException) {
-            setRefreshStatus(FavoritesRefreshStatus.Failed)
-        } catch (cancelled: CancellationException) {
-            setRefreshStatus(FavoritesRefreshStatus.Idle)
-            throw cancelled
-        } catch (_: Exception) {
-            // SWR keeps the last local data usable and retries on the next tick.
-            setRefreshStatus(FavoritesRefreshStatus.Failed)
-        }
-    }
-
-    private fun setRefreshStatus(status: FavoritesRefreshStatus) {
-        mutableState.update { current ->
-            (current as? HomeUiState.Ready)?.copy(favoritesRefresh = status) ?: current
-        }
+        revalidateFavorites()
     }
 
     companion object {
         val Factory = viewModelFactory {
             initializer {
                 val application = checkNotNull(this[APPLICATION_KEY]) as FinPulseApplication
-                HomeViewModel(application.homeRepository)
+                HomeViewModel(application.observeHomeUseCase, application.revalidateFavoritesUseCase)
             }
         }
     }

@@ -5,7 +5,6 @@ import androidx.test.core.app.ApplicationProvider
 import br.com.goulart.finpulse.data.local.FinPulseDatabase
 import br.com.goulart.finpulse.data.model.HomeSnapshot
 import br.com.goulart.finpulse.data.remote.mock.MockMarketData
-import br.com.goulart.finpulse.data.repository.RoomHomeRepository
 import java.util.UUID
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.first
@@ -19,7 +18,7 @@ import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
 
-class RoomHomeRepositoryTest {
+class HomeRepositoryImplTest {
     private lateinit var context: Context
     private lateinit var database: FinPulseDatabase
     private lateinit var name: String
@@ -45,7 +44,7 @@ class RoomHomeRepositoryTest {
         database.portfolioDao().saveWithHistory(portfolio.copy(balanceInCents = 42_000_000), listOf(8f, 2f, 9f))
         database.favoriteDao().remove(1, "VALE3")
 
-        val actual = RoomHomeRepository(database).observeHome().first()
+        val actual = homeRepository(database).observeSnapshots().first()
         assertEquals("Investidor local", actual.investor.firstName)
         assertEquals(42_000_000L, actual.portfolio.balanceInCents)
         assertEquals(listOf(8f, 2f, 9f), actual.portfolio.history)
@@ -56,7 +55,7 @@ class RoomHomeRepositoryTest {
     @Test
     fun observesChangesAcrossAllSixTablesWithConsistentHistories() = runBlocking {
         val snapshots = Channel<HomeSnapshot>(Channel.UNLIMITED)
-        val collection = launch { RoomHomeRepository(database).observeHome().collect { snapshots.send(it) } }
+        val collection = launch { homeRepository(database).observeSnapshots().collect { snapshots.send(it) } }
         suspend fun awaitSnapshot(predicate: (HomeSnapshot) -> Boolean): HomeSnapshot = withTimeout(5_000) {
             var snapshot = snapshots.receive()
             while (!predicate(snapshot)) snapshot = snapshots.receive()
@@ -96,7 +95,7 @@ class RoomHomeRepositoryTest {
     fun missingRequiredDataFailsWithoutFallingBackToTheMock() = runBlocking {
         database.investorDao().deleteById(1)
         try {
-            RoomHomeRepository(database).observeHome().first()
+            homeRepository(database).observeSnapshots().first()
             fail("A missing investor must fail instead of returning mock data")
         } catch (error: IllegalStateException) {
             assertTrue(error.message.orEmpty().contains("Investor 1"))
@@ -106,7 +105,7 @@ class RoomHomeRepositoryTest {
     @Test
     fun anEmptyMarketRemainsEmptyInsteadOfUsingMockStocks() = runBlocking {
         database.stockDao().getAllWithHistory().forEach { database.stockDao().deleteBySymbol(it.stock.symbol) }
-        val snapshot = RoomHomeRepository(database).observeHome().first()
+        val snapshot = homeRepository(database).observeSnapshots().first()
         assertTrue(snapshot.stocks.isEmpty())
         assertTrue(snapshot.favorites.isEmpty())
         assertEquals(MockMarketData.home.portfolio, snapshot.portfolio)

@@ -1,9 +1,13 @@
 package br.com.goulart.finpulse
 
 import androidx.lifecycle.viewModelScope
+import br.com.goulart.finpulse.data.model.FavoritesRefreshStatus
+import br.com.goulart.finpulse.data.model.HomeData
 import br.com.goulart.finpulse.data.model.HomeSnapshot
 import br.com.goulart.finpulse.data.remote.mock.MockMarketData
 import br.com.goulart.finpulse.data.repository.HomeRepository
+import br.com.goulart.finpulse.domain.usecase.ObserveHomeUseCase
+import br.com.goulart.finpulse.domain.usecase.RevalidateFavoritesUseCase
 import br.com.goulart.finpulse.ui.home.HomeUiState
 import br.com.goulart.finpulse.ui.home.HomeViewModel
 import java.io.IOException
@@ -17,6 +21,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
@@ -41,11 +46,12 @@ class HomeViewModelTest {
         Dispatchers.resetMain()
     }
 
-    private fun viewModel(repository: HomeRepository) = HomeViewModel(repository).also(viewModels::add)
+    private fun viewModel(repository: HomeRepository) = HomeViewModel(ObserveHomeUseCase(repository), RevalidateFavoritesUseCase(repository)).also(viewModels::add)
 
     private fun repository(observe: () -> Flow<HomeSnapshot>) = object : HomeRepository {
-        override fun observeHome() = observe()
+        override fun observeHome() = observe().map { HomeData(it, FavoritesRefreshStatus.Idle) }
         override suspend fun refreshFavorites() = observe().first()
+        override suspend fun revalidateFavoritesWhileVisible() { awaitCancellation() }
     }
 
     @Test

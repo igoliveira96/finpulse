@@ -16,7 +16,6 @@ import br.com.goulart.finpulse.data.local.FinPulseDatabase
 import br.com.goulart.finpulse.data.remote.FavoriteQuotesApi
 import br.com.goulart.finpulse.data.remote.mock.MockMarketData
 import br.com.goulart.finpulse.data.remote.model.StockQuote
-import br.com.goulart.finpulse.data.repository.RoomHomeRepository
 import br.com.goulart.finpulse.ui.home.HomeRoute
 import br.com.goulart.finpulse.ui.home.HomeViewModel
 import br.com.goulart.finpulse.ui.theme.FinPulseTheme
@@ -57,7 +56,7 @@ class HomeSwrIntegrationTest {
                 StockQuote(symbol, stock.priceInCents + 100, 3.5, stock.history)
             }
         }
-        val model = HomeViewModel(RoomHomeRepository(database, quotesApi = api))
+        val model = homeViewModel(homeRepository(database, quotesApi = api))
         viewModel = model
         compose.setContent { FinPulseTheme { HomeRoute(model) } }
         val values = compose.onNodeWithTag("favorite_values_PETR4")

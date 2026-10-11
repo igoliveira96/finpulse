@@ -7,14 +7,20 @@ em centavos. A ordem dos gráficos usa `sample_index`; os pontos do mock não t�
 
 O arquivo `app/src/main/assets/database/finpulse.db` é a base SQLite empacotada.
 `FinPulseApplication` fornece uma instância compartilhada do banco e do
-`RoomHomeRepository`. A primeira consulta assíncrona da Home abre o Room fora da
+`HomeRepositoryImpl`. A primeira consulta assíncrona da Home abre o Room fora da
 thread principal.
 `createFromAsset` copia e valida a base apenas quando o banco local ainda não existe.
 Abrir novamente não sobrescreve edições nem duplica registros.
 
-A Home recebe o `RoomHomeRepository` pelo `HomeViewModel.Factory`. O repositório
-observa as seis tabelas e monta o `HomeSnapshot` em uma transação, incluindo
-favoritas e históricos ordenados. Alterações persistidas são refletidas na tela.
+A Home recebe `ObserveHomeUseCase` e `RevalidateFavoritesUseCase` pelo
+`HomeViewModel.Factory`. Os use cases chamam `HomeRepository`, cuja implementação
+`HomeRepositoryImpl` delega ao `HomeDataSourceImpl`. O datasource coordena a
+leitura local e a revalidação remota, publicando os dados e o status das favoritas
+em um único `HomeData`.
+
+`RoomHomeLocalDataSource` observa as seis tabelas e monta o `HomeSnapshot` em uma
+transação, incluindo favoritas e históricos ordenados. Alterações persistidas são
+refletidas na tela.
 O investidor local tem id `1`; uma futura sessão poderá fornecer outro id.
 
 `MockMarketData` fornece dados de referência para previews, testes e a simulação
@@ -23,25 +29,28 @@ patrimônio levam ao estado de erro, sem substituir dados locais pelo mock.
 
 ## Organização da camada de dados
 
-- `data/model`: modelos compartilhados com a Home (`Investor`, `Portfolio`,
-  `Stock` e `HomeSnapshot`).
-- `data/repository`: contrato `HomeRepository` e implementação `RoomHomeRepository`,
-  que coordena o banco local e a atualização das cotações.
-- `data/local`: banco Room, DAOs, entidades, relações e mapeamentos locais.
+- `domain/usecase`: observação da Home e revalidação das favoritas.
+- `data/model`: modelos da Home e estados da revalidação, sem dependência da UI.
+- `data/repository`: contrato `HomeRepository` e implementação `HomeRepositoryImpl`.
+- `data/datasource`: contrato `HomeDataSource` e implementação SWR `HomeDataSourceImpl`.
+- `data/local`: `HomeLocalDataSource`, implementação Room, banco, DAOs, entidades,
+  relações e mapeamentos locais.
 - `data/remote`: contrato `FavoriteQuotesApi`; `model` contém a resposta
   `StockQuote` e `mock` contém a simulação de cotações e os dados de referência.
 
 ## SWR das favoritas
 
-A Home mostra primeiro o cache do Room e revalida somente as favoritas através de
-`FavoriteQuotesApi`. A implementação `MockFavoriteQuotesApi` simula 1,2 segundo
+`HomeDataSourceImpl` mostra primeiro o cache do Room e revalida somente as favoritas
+através de `FavoriteQuotesApi`. A implementação `MockFavoriteQuotesApi` simula 1,2 segundo
 de latência e varia preços, variações e os pontos dos gráficos para demonstração.
 Não são cotações de mercado em tempo real.
 
 Enquanto a Home estiver visível, a primeira revalidação começa assim que o cache
 está disponível. As próximas começam a cada 5 segundos, contados entre inícios,
-sem somar a latência ao intervalo e sem sobrepor requisições. Ao sair da Home,
-o ciclo e a requisição em andamento são cancelados; ao voltar, revalida novamente.
+sem somar a latência ao intervalo e sem sobrepor requisições. O datasource controla
+o intervalo, timeout e novas tentativas; a tela controla o ciclo de vida do trabalho.
+Ao sair da Home, o ciclo e a requisição em andamento são cancelados; ao voltar,
+revalida novamente.
 
 Durante a requisição, os valores dos cards de favoritas ficam desfocados e a seção
 mostra “Atualizando…”. Após validar e gravar a resposta em uma transação, o blur é

@@ -6,7 +6,6 @@ import br.com.goulart.finpulse.data.local.FinPulseDatabase
 import br.com.goulart.finpulse.data.remote.FavoriteQuotesApi
 import br.com.goulart.finpulse.data.remote.mock.MockMarketData
 import br.com.goulart.finpulse.data.remote.model.StockQuote
-import br.com.goulart.finpulse.data.repository.RoomHomeRepository
 import java.io.IOException
 import java.util.UUID
 import kotlinx.coroutines.CompletableDeferred
@@ -40,11 +39,11 @@ class FavoritesRevalidationTest {
     @Test
     fun requestsAndPersistsOnlyFavoriteQuotes() = runBlocking {
         var requested = emptyList<String>()
-        val repository = RoomHomeRepository(database, quotesApi = FavoriteQuotesApi {
+        val repository = homeRepository(database, quotesApi = FavoriteQuotesApi {
             requested = it
             quotes(it)
         })
-        val before = repository.observeHome().first()
+        val before = repository.observeSnapshots().first()
         val updated = repository.refreshFavorites()
         assertEquals(before.favorites.map { it.symbol }.toSet(), requested.toSet())
         assertEquals(before.portfolio, updated.portfolio)
@@ -54,35 +53,35 @@ class FavoritesRevalidationTest {
         assertEquals(listOf(1f, 2f, 3f), updated.favorites.first().history)
         database.close()
         database = FinPulseDatabase.create(context, name)
-        assertEquals(updated, RoomHomeRepository(database).observeHome().first())
+        assertEquals(updated, homeRepository(database).observeSnapshots().first())
     }
 
     @Test
     fun failurePreservesAllCachedValues() = runBlocking {
-        val repository = RoomHomeRepository(database, quotesApi = FavoriteQuotesApi { throw IOException("Offline") })
-        val before = repository.observeHome().first()
+        val repository = homeRepository(database, quotesApi = FavoriteQuotesApi { throw IOException("Offline") })
+        val before = repository.observeSnapshots().first()
         try { repository.refreshFavorites(); fail("Expected request failure") } catch (_: IOException) { }
-        assertEquals(before, repository.observeHome().first())
+        assertEquals(before, repository.observeSnapshots().first())
     }
 
     @Test
     fun aPartialResponseCannotPartiallyOverwriteTheCache() = runBlocking {
-        val repository = RoomHomeRepository(database, quotesApi = FavoriteQuotesApi { quotes(it).dropLast(1) })
-        val before = repository.observeHome().first()
+        val repository = homeRepository(database, quotesApi = FavoriteQuotesApi { quotes(it).dropLast(1) })
+        val before = repository.observeSnapshots().first()
         try { repository.refreshFavorites(); fail("Expected response validation failure") } catch (_: IllegalArgumentException) { }
-        assertEquals(before, repository.observeHome().first())
+        assertEquals(before, repository.observeSnapshots().first())
     }
 
     @Test
     fun aFavoriteRemovedDuringTheRequestIsNotUpdatedOrRestored() = runBlocking {
         val started = CompletableDeferred<Unit>()
         val respond = CompletableDeferred<Unit>()
-        val repository = RoomHomeRepository(database, quotesApi = FavoriteQuotesApi {
+        val repository = homeRepository(database, quotesApi = FavoriteQuotesApi {
             started.complete(Unit)
             respond.await()
             quotes(it)
         })
-        val before = repository.observeHome().first()
+        val before = repository.observeSnapshots().first()
         val request = async { repository.refreshFavorites() }
         started.await()
         database.favoriteDao().remove(1, "PETR4")

@@ -67,6 +67,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import br.com.goulart.finpulse.R
+import br.com.goulart.finpulse.data.model.FavoritesRefreshStatus
 import br.com.goulart.finpulse.data.model.HomeSnapshot
 import br.com.goulart.finpulse.data.model.Portfolio
 import br.com.goulart.finpulse.data.model.Stock

@@ -1,10 +1,15 @@
 package br.com.goulart.finpulse
 
 import androidx.lifecycle.viewModelScope
+import br.com.goulart.finpulse.data.datasource.HomeDataSourceImpl
+import br.com.goulart.finpulse.data.model.FavoritesRefreshStatus
 import br.com.goulart.finpulse.data.model.HomeSnapshot
+import br.com.goulart.finpulse.data.remote.FavoriteQuotesApi
 import br.com.goulart.finpulse.data.remote.mock.MockMarketData
-import br.com.goulart.finpulse.data.repository.HomeRepository
-import br.com.goulart.finpulse.ui.home.FavoritesRefreshStatus
+import br.com.goulart.finpulse.data.remote.model.StockQuote
+import br.com.goulart.finpulse.data.repository.HomeRepositoryImpl
+import br.com.goulart.finpulse.domain.usecase.ObserveHomeUseCase
+import br.com.goulart.finpulse.domain.usecase.RevalidateFavoritesUseCase
 import br.com.goulart.finpulse.ui.home.HomeUiState
 import br.com.goulart.finpulse.ui.home.HomeViewModel
 import java.io.IOException
@@ -13,7 +18,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
@@ -43,12 +47,15 @@ class FavoritesSwrTest {
     }
 
     private fun model(initial: HomeSnapshot = cached, refresh: suspend () -> HomeSnapshot): HomeViewModel {
-        val snapshots = MutableStateFlow(initial)
-        val repository = object : HomeRepository {
-            override fun observeHome() = snapshots
-            override suspend fun refreshFavorites() = refresh().also { snapshots.value = it }
+        val local = InMemoryHomeLocalDataSource(initial)
+        val remote = FavoriteQuotesApi { symbols ->
+            refresh().stocks.filter { it.symbol in symbols }.map {
+                StockQuote(it.symbol, it.priceInCents, it.dailyChangePercent, it.history)
+            }
         }
-        return HomeViewModel(repository).also(models::add)
+        val repository = HomeRepositoryImpl(HomeDataSourceImpl(local, remote))
+        return HomeViewModel(ObserveHomeUseCase(repository), RevalidateFavoritesUseCase(repository))
+            .also(models::add)
     }
 
     private fun HomeViewModel.ready() = state.value as HomeUiState.Ready

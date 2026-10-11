@@ -8,7 +8,6 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.lifecycle.viewModelScope
 import androidx.test.core.app.ApplicationProvider
 import br.com.goulart.finpulse.data.local.FinPulseDatabase
-import br.com.goulart.finpulse.data.repository.RoomHomeRepository
 import br.com.goulart.finpulse.ui.home.HomeRoute
 import br.com.goulart.finpulse.ui.home.HomeViewModel
 import br.com.goulart.finpulse.ui.theme.FinPulseTheme
@@ -51,7 +50,7 @@ class HomeRoomIntegrationTest {
             database.portfolioDao().upsert(original.copy(balanceInCents = 42_000_000))
             original
         }
-        val viewModel = HomeViewModel(RoomHomeRepository(database))
+        val viewModel = homeViewModel(homeRepository(database))
         homeViewModel = viewModel
         compose.setContent { FinPulseTheme { HomeRoute(viewModel) } }
         awaitText("R$ 420.000,00")
