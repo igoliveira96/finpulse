@@ -69,7 +69,7 @@ class FinPulseDatabaseTest {
         assertEquals(2, database.favoriteDao().getByInvestor(1).size)
         assertEquals(6, database.stockDao().getAllWithHistory().size)
         assertEquals(26, database.portfolioDao().getWithHistory(1)?.history?.size)
-        // Local edits must not leak into the current mock-backed Home data source.
+        // Local edits must not mutate the independent mock fixture.
         assertEquals(MockMarketData.home, MockFinPulseApi(latencyMillis = 0).getHome())
     }
 

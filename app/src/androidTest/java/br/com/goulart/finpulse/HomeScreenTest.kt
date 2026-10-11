@@ -23,7 +23,7 @@ class HomeScreenTest {
     }
 
     @Test
-    fun mockedResponseDisplaysPortfolioFavoritesAndCompleteMarketList() {
+    fun localDatabaseDisplaysPortfolioFavoritesAndCompleteMarketList() {
         awaitHome()
         compose.onNodeWithText("R$ 350.000,00").assertIsDisplayed()
         compose.onNodeWithText("Favoritas").assertIsDisplayed()

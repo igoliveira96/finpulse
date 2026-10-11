@@ -6,14 +6,20 @@ seis ações com 11 pontos cada e três favoritas. Valores monetários são inte
 em centavos. A ordem dos gráficos usa `sample_index`; os pontos do mock não têm datas.
 
 O arquivo `app/src/main/assets/database/finpulse.db` é a base SQLite empacotada.
-Na inicialização do app, `FinPulseApplication` abre o Room em uma coroutine de IO.
+`FinPulseApplication` fornece uma instância compartilhada do banco e do
+`RoomHomeRepository`. A primeira consulta assíncrona da Home abre o Room fora da
+thread principal.
 `createFromAsset` copia e valida a base apenas quando o banco local ainda não existe.
 Abrir novamente não sobrescreve edições nem duplica registros.
 
-A Home e `HomeViewModel.Factory` continuam usando `MockFinPulseApi`.
-Os DAOs e mapeadores locais estão preparados, mas não foram conectados à UI ou
-a um repositório. Uma falha de inicialização é registrada no Logcat com a tag
-`FinPulseDatabase`, sem interromper a Home mockada.
+A Home recebe o `RoomHomeRepository` pelo `HomeViewModel.Factory`. O repositório
+observa as seis tabelas e monta o `HomeSnapshot` em uma transação, incluindo
+favoritas e históricos ordenados. Alterações persistidas são refletidas na tela.
+O investidor local tem id `1`; uma futura sessão poderá fornecer outro id.
+
+`MockFinPulseApi` não participa do carregamento da Home. O mock é mantido como
+referência para previews e testes. Falhas de leitura ou ausência do investidor ou
+patrimônio levam ao estado de erro, sem substituir dados locais pelo mock.
 
 ## Regerar a base
 

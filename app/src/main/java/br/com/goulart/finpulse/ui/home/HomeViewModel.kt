@@ -1,11 +1,13 @@
 package br.com.goulart.finpulse.ui.home
 
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
-import br.com.goulart.finpulse.data.FinPulseApi
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import br.com.goulart.finpulse.FinPulseApplication
+import br.com.goulart.finpulse.data.HomeRepository
 import br.com.goulart.finpulse.data.HomeSnapshot
-import br.com.goulart.finpulse.data.MockFinPulseApi
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,14 +19,16 @@ sealed interface HomeUiState {
     data object Error : HomeUiState
 }
 
-class HomeViewModel(api: FinPulseApi) : ViewModel() {
+class HomeViewModel(repository: HomeRepository) : ViewModel() {
     private val mutableState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
     val state = mutableState.asStateFlow()
 
     init {
         viewModelScope.launch {
             try {
-                mutableState.value = HomeUiState.Ready(api.getHome())
+                repository.observeHome().collect { snapshot ->
+                    mutableState.value = HomeUiState.Ready(snapshot)
+                }
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (_: Exception) {
@@ -34,11 +38,10 @@ class HomeViewModel(api: FinPulseApi) : ViewModel() {
     }
 
     companion object {
-        val Factory: ViewModelProvider.Factory = object : ViewModelProvider.Factory {
-            @Suppress("UNCHECKED_CAST")
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                require(modelClass.isAssignableFrom(HomeViewModel::class.java))
-                return HomeViewModel(MockFinPulseApi()) as T
+        val Factory = viewModelFactory {
+            initializer {
+                val application = checkNotNull(this[APPLICATION_KEY]) as FinPulseApplication
+                HomeViewModel(application.homeRepository)
             }
         }
     }
